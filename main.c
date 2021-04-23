@@ -19,6 +19,7 @@
 #include <xc.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #define _XTAL_FREQ 4000
 void main(){
     //Configura entradas y salidas
@@ -44,18 +45,45 @@ void main(){
     ADCON1bits.VCFG1=0;
     ADCON0bits.ADON=1;
     ADCON0bits.CHS=1;
-    
-    char aux;
+   
+    unsigned int aux2;
+    char n[4];
     
     while (1)
     {
         //Medicion de temperatura
         ADCON0bits.GO=1; //ARRANCA
         while (ADCON0bits.GO==1) //ESPERAR A QUE TERMINE DE MEDIR
-        aux= (ADRESH<<8)+ADRESL; //GUARDA EL VALOR MEDIDO EN UNA VARIABLE AUXILIAR
+        aux2= (ADRESH<<8)+ADRESL; //GUARDA EL VALOR MEDIDO EN UNA VARIABLE AUXILIAR
         __delay_ms(2);
         if (RCIF == 1){
-            if(RCREG == 'A') TXREG=aux; //ENVIA EL RESULTADO
+            if(RCREG == 'A')
+            {
+                if (aux2 > 1000) {
+                    TXREG=(aux2/1000)+'0';
+                    aux2-aux2-1000;
+                    TXREG=(aux2/100)+'0';
+                    aux2=aux2-aux2*100;
+                    TXREG=(aux2/10)+'0';
+                    aux2=aux2-aux2*10;
+                    TXREG=aux2+'0';
+                }
+                else if (aux2 > 100) {
+                    TXREG=(aux2/100)+'0';
+                    aux2=aux2-aux2*100;
+                    TXREG=(aux2/10)+'0';
+                    aux2=aux2-aux2*10;
+                    TXREG=aux2+'0';
+                }
+                else if (aux2 > 10) {
+                    TXREG=(aux2/10)+'0';
+                    aux2=aux2-aux2*10;
+                    TXREG=aux2+'0';
+                }
+                else{
+                    TXREG=aux2+'0';
+                }
+            }
         }
     }
 }
