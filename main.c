@@ -49,47 +49,28 @@ void main(){
     unsigned int aux2;
     char cadena[5];
     
-    while (1)
-    {
-        ADCON0bits.GO=1;
-        while (ADCON0bits.GO==1)
-        aux2= (ADRESH<<8)+ADRESL;
-        __delay_ms(2);
-        if (RCIF == 1){
-            if(RCREG == 'A')
-            {             
-                if (aux2 > 1000) {
-                    cadena[0] = (aux2/1000)+'0';
-                    cadena[1] = ((aux2/100)%10)+'0';
-                    cadena[2] = ((aux2/10)%10)+'0';
-                    cadena[3] = (aux2%10)+'0';
-                    SendSerial(cadena);
-                }
-                else if (aux2 > 100) {
-                    cadena[0] = (aux2/100)+'0';
-                    cadena[1] = ((aux2/10)%10)+'0';
-                    cadena[2] = (aux2%10)+'0';
-                    SendSerial(cadena);
-                }
-                else if (aux2 > 10) {
-                    cadena[0] = (aux2/10)+'0';
-                    cadena[1] = (aux2%10)+'0';
-                    SendSerial(cadena);
-                }
-                else{
-                    TXREG = (aux2%10)+'0';
-                }
+    while(1){
+        //Se mantiene en un bucle infinito hasta que recibe un caracter en la UART
+        if(RCIF == 1){
+            c=RCREG;
+            //Verifica si ese caracter es la letra 'A' (mayuscula) o la 'a' (minuscula)
+            if(c=='A' || c=='a'){
+                //Realiza la conversion AD y espera que finalize
+                ADCON0bits.GO = 1;
+                while(ADCON0bits.GO == 1)
+                //Reconstrucción del valor digital en un único registro de 16 bits
+                D=(ADRESH<<8)|ADRESL;
+                //Uso de la función printf para convertir el valor en una cadena de caracteres, la función putch enviará los mismos a la UART
+                //Agrega caracteres \n y \r al final para que el termina pase a la linea de abajo
+                printf("Valor: %d\n\r", D);
             }
         }
     }
 }
 
-void SendSerial(unsigned char *data)
-{
-    unsigned char x=0;
-    while(data[x]!='\0'){
-        while(PIR1bits.TXIF==0){}   
-        TXREG=data[x];
-        x++;
-    }
+void putch(char c){
+    //Espera que el registro TXREG de la UART esté vacío
+    while(PIR1bits.TXIF == 0)
+    //Envía caracter hacia el terminal serie
+    TXREG = c;
 }
